@@ -54,4 +54,7 @@ dependencies {
 
     //OkHTTP
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
+
+    //Popup Dialog
+    implementation("com.saadahmedev.popup-dialog:popup-dialog:1.0.5")
 }
