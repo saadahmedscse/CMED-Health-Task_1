@@ -4,22 +4,22 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.ContentValues
 import android.content.Intent
 import android.os.Binder
 import android.os.Environment
 import android.os.IBinder
+import android.provider.MediaStore
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody
-import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
-import java.io.OutputStream
 import java.util.concurrent.Executors
+
 
 class DownloadService : Service() {
 
@@ -76,21 +76,27 @@ class DownloadService : Service() {
 
                 if (response.isSuccessful) {
                     val body: ResponseBody? = response.body
+                    Log.d("response_debug", "response successful")
                     if (body != null) {
+                        Log.d("response_debug", "body not null")
                         val contentLength = body.contentLength()
                         var bytesRead: Int
                         val bufferSize = 4096
                         val data = ByteArray(bufferSize)
 
+                        val values = ContentValues()
+                        values.put(MediaStore.MediaColumns.DISPLAY_NAME, "CMED Downloaded File")
+                        values.put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
+                        values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/CMED DOWNLOADER/")
+                        val uri = contentResolver.insert(MediaStore.Files.getContentUri("external"), values)
+
+                        val outputStream = contentResolver.openOutputStream(uri!!)
                         val inputStream: InputStream = body.byteStream()
-                        val outputFile = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "CMED Downloader File.mp4")
-                        if (outputFile.exists()) outputFile.delete()
-                        val outputStream: OutputStream = FileOutputStream(outputFile)
 
                         var totalBytesRead = 0
                         var progress = 0
                         while (inputStream.read(data).also { bytesRead = it } != -1) {
-                            outputStream.write(data, 0, bytesRead)
+                            outputStream?.write(data, 0, bytesRead)
                             totalBytesRead += bytesRead
                             val newProgress = ((totalBytesRead * 100) / contentLength).toInt()
 
@@ -102,13 +108,14 @@ class DownloadService : Service() {
                             }
                         }
 
-                        outputStream.flush()
-                        outputStream.close()
+                        outputStream?.flush()
+                        outputStream?.close()
                         inputStream.close()
                     }
                 }
             } catch (e: IOException) {
                 e.printStackTrace()
+                Log.d("response_debug", "error ${e.localizedMessage}")
             }
         }
     }
