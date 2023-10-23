@@ -63,7 +63,7 @@ class MainActivity : AppCompatActivity() {
             }
             else {
                 if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE), STORAGE_WRITE_REQUEST_CODE)
+                    requestPermissions(arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.READ_EXTERNAL_STORAGE), STORAGE_WRITE_REQUEST_CODE)
                 } else {
                     startDownloadService()
                 }
@@ -113,7 +113,7 @@ class MainActivity : AppCompatActivity() {
                 PopupDialog.getInstance(this)
                     .setStyle(Styles.SUCCESS)
                     .setHeading("Downloaded")
-                    .setDescription("Download completed. The file can be found in the Download directory.")
+                    .setDescription("Download completed. The file can be found in \"CMED DOWNLOAD\" folder in the Download directory.")
                     .setCancelable(false)
                     .showDialog(object : OnDialogButtonClickListener() {
                         override fun onDismissClicked(dialog: Dialog?) {
@@ -135,10 +135,12 @@ class MainActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        if (requestCode == STORAGE_WRITE_REQUEST_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            startDownloadService()
-        } else {
-            Toast.makeText(this, "Storage write permission is required", Toast.LENGTH_SHORT).show()
+        if (requestCode == STORAGE_WRITE_REQUEST_CODE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startDownloadService()
+            } else {
+                Toast.makeText(this, "Storage write permission is required", Toast.LENGTH_SHORT).show()
+            }
         }
 
         if (requestCode == POST_NOTIFICATION_REQUEST_CODE) {
